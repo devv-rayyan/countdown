@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f0c29">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>My Countdown</title>
+<style>
+  :root{
+    --bg1:#0f0c29; --bg2:#302b63; --bg3:#24243e;
+    --card:rgba(255,255,255,.07); --border:rgba(255,255,255,.14);
+    --text:#fff; --muted:rgba(255,255,255,.65);
+    --accent:#ff9a56; --accent2:#ff5e9c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+    min-height:100vh; color:var(--text);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%,var(--bg3));
+    background-attachment:fixed;
+    padding:max(20px,env(safe-area-inset-top)) 18px 40px;
+    animation:pageIn .6s ease both;
+  }
+  @keyframes pageIn{from{opacity:0}to{opacity:1}}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:22px;animation:dropIn .5s .1s cubic-bezier(.2,.8,.3,1.1) both}
+  @keyframes dropIn{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+  h1{font-size:1.35rem;font-weight:800;letter-spacing:.3px;flex:1;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+  .icon-btn{
+    background:var(--card);border:1px solid var(--border);color:var(--text);
+    width:42px;height:42px;border-radius:12px;font-size:1.1rem;cursor:pointer;
+    backdrop-filter:blur(8px);transition:transform .15s;
+  }
+  .icon-btn:active{transform:scale(.88)}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:20px;
+    padding:22px 20px;margin-bottom:16px;backdrop-filter:blur(10px);
+    box-shadow:0 8px 30px rgba(0,0,0,.25);position:relative;overflow:hidden;
+    transition:transform .18s ease, box-shadow .18s ease;
+    animation:cardIn .55s cubic-bezier(.2,.8,.3,1.15) both;
+  }
+  .card:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,0,0,.32)}
+  @keyframes cardIn{
+    from{opacity:0;transform:translateY(26px) scale(.96)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+  }
+  .card::before{
+    content:'';position:absolute;inset:0 0 auto 0;height:4px;
+    background:linear-gradient(90deg,var(--c1,#ff9a56),var(--c2,#ff5e9c));
+  }
+  .event-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .emoji{font-size:1.6rem;animation:bob 3s ease-in-out infinite;display:inline-block}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .event-name{font-size:1.05rem;font-weight:700;flex:1}
+  .edit-link{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:6px;transition:color .15s}
+  .edit-link:active{color:var(--text)}
+  .big-days{display:flex;align-items:baseline;gap:8px;margin:8px 0 4px}
+  .days-num{
+    font-size:3.6rem;font-weight:900;line-height:1;
+    background:linear-gradient(90deg,var(--c1,#ff9a56),var(--c2,#ff5e9c));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    font-variant-numeric:tabular-nums;
+  }
+  .days-label{font-size:1.1rem;color:var(--muted);font-weight:600}
+  .hms{display:flex;gap:8px;margin-top:12px}
+  .hms div{
+    flex:1;background:rgba(0,0,0,.25);border:1px solid var(--border);
+    border-radius:12px;padding:10px 4px;text-align:center;
+    transition:border-color .3s;
+  }
+  .hms b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;transition:transform .18s ease}
+  .hms b.tick{animation:numPop .3s ease}
+  @keyframes numPop{0%{transform:scale(1.18)}100%{transform:scale(1)}}
+  .hms span{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .date-line{font-size:.82rem;color:var(--muted);margin-top:12px}
+  .done-tag{
+    display:inline-block;margin-top:10px;padding:4px 12px;border-radius:20px;font-size:.8rem;
+    background:rgba(80,220,130,.15);color:#6fe3a1;border:1px solid rgba(80,220,130,.35);
+  }
+  .add-btn{
+    width:100%;padding:16px;border-radius:16px;border:1.5px dashed var(--border);
+    background:rgba(255,255,255,.04);color:var(--muted);font-size:1rem;font-weight:600;
+    cursor:pointer;margin-top:4px;transition:border-color .2s,color .2s,transform .15s;
+    animation:cardIn .55s .4s cubic-bezier(.2,.8,.3,1.15) both;
+  }
+  .add-btn:active{transform:scale(.97)}
+  /* ---- calendar ---- */
+  .cal-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .cal-title{flex:1;font-size:1.05rem;font-weight:800;text-align:center}
+  .cal-nav{
+    width:36px;height:36px;border-radius:10px;border:1px solid var(--border);
+    background:rgba(255,255,255,.06);color:var(--text);font-size:1rem;cursor:pointer;
+    transition:transform .15s;
+  }
+  .cal-nav:active{transform:scale(.88)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .cal-dow{font-size:.62rem;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.5px;padding:4px 0;font-weight:700}
+  .cal-day{
+    position:relative;aspect-ratio:1;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-size:.85rem;font-variant-numeric:tabular-nums;cursor:pointer;border:1px solid transparent;
+    background:rgba(255,255,255,.03);color:var(--text);transition:transform .12s,background .15s;
+  }
+  .cal-day:active{transform:scale(.88)}
+  .cal-day.empty{background:transparent;cursor:default;pointer-events:none}
+  .cal-day.dim{color:rgba(255,255,255,.28)}
+  .cal-day.today{border:1.5px solid var(--accent);font-weight:800;
+    box-shadow:0 0 12px rgba(255,154,86,.35)}
+  .cal-day.has-ev{background:linear-gradient(135deg,var(--ec1),var(--ec2));font-weight:700;color:#fff;
+    box-shadow:0 3px 10px rgba(0,0,0,.3)}
+  .cal-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .cal-chip{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted);
+    background:rgba(0,0,0,.2);padding:4px 10px;border-radius:20px;border:1px solid var(--border)}
+  .cal-dot{width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--c2))}
+  /* ---- modal ---- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+    display:flex;align-items:flex-end;justify-content:center;z-index:50;
+    opacity:0;pointer-events:none;transition:opacity .25s ease;
+  }
+  .overlay.open{opacity:1;pointer-events:auto}
+  .sheet{
+    width:100%;max-width:440px;background:#1c1936;border:1px solid var(--border);
+    border-radius:24px 24px 0 0;padding:24px 20px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.3,1);
+    max-height:88vh;overflow-y:auto;
+  }
+  .overlay.open .sheet{transform:translateY(0)}
+  .sheet h2{font-size:1.15rem;margin-bottom:16px}
+  label{display:block;font-size:.78rem;color:var(--muted);margin:12px 0 5px;text-transform:uppercase;letter-spacing:1px}
+  input[type=text],input[type=date]{
+    width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--border);
+    background:rgba(255,255,255,.06);color:var(--text);font-size:1rem;outline:none;
+    transition:border-color .2s;
+  }
+  input:focus{border-color:var(--accent)}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap}
+  .swatch{width:38px;height:38px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .15s}
+  .swatch.sel{border-color:#fff;transform:scale(1.12)}
+  .row{display:flex;gap:10px;margin-top:22px}
+  .btn{
+    flex:1;padding:14px;border-radius:14px;border:none;font-size:1rem;font-weight:700;cursor:pointer;
+    transition:transform .15s,opacity .15s;
+  }
+  .btn:active{transform:scale(.95)}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
+  .btn.ghost{background:rgba(255,255,255,.08);color:var(--muted)}
+  .btn.danger{background:rgba(255,80,80,.15);color:#ff8080;flex:0 0 auto;padding:14px 18px}
+  .toast{
+    position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);
+    background:#2a2748;border:1px solid var(--border);padding:10px 18px;border-radius:30px;
+    font-size:.85rem;opacity:0;transition:.3s;pointer-events:none;z-index:99;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .hint{font-size:.75rem;color:var(--muted);text-align:center;margin-top:18px;line-height:1.6;animation:pageIn .6s .6s ease both}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="appTitle">My Countdown 🌴</h1>
+  <button class="icon-btn" onclick="editTitle()" title="Edit title">✏️</button>
+  <button class="icon-btn" onclick="openAdd()" title="Add event">＋</button>
+</header>
+
+<div id="events"></div>
+
+<!-- CALENDAR -->
+<div class="card" id="calCard" style="--c1:#a18cd1;--c2:#56ccf2;animation-delay:.35s">
+  <div class="cal-head">
+    <button class="cal-nav" onclick="shiftMonth(-1)">‹</button>
+    <div class="cal-title" id="calTitle"></div>
+    <button class="cal-nav" onclick="shiftMonth(1)">›</button>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div class="cal-legend" id="calLegend"></div>
+</div>
+
+<button class="add-btn" onclick="openAdd()">＋ Add new countdown</button>
+
+<p class="hint">Tip: calendar pe kisi date pe tap karo → naya countdown 📲<br>All changes save automatically on this device.</p>
+
+<!-- edit sheet -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet">
+    <h2 id="sheetTitle">New countdown</h2>
+    <label>Title</label>
+    <input type="text" id="fName" placeholder="e.g. JDST Exam" maxlength="40">
+    <label>Emoji (optional)</label>
+    <input type="text" id="fEmoji" placeholder="📚" maxlength="4">
+    <label>Date</label>
+    <input type="date" id="fDate">
+    <label>Colour theme</label>
+    <div class="swatches" id="swatches"></div>
+    <div class="row">
+      <button class="btn danger" id="delBtn" onclick="deleteEvent()" style="display:none">🗑</button>
+      <button class="btn ghost" onclick="closeSheet()">Cancel</button>
+      <button class="btn primary" onclick="saveEvent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const THEMES = [
+  ['#ff9a56','#ff5e9c'], ['#56ccf2','#2f80ed'], ['#43e97b','#38f9d7'],
+  ['#f857a6','#ff5858'], ['#f7b733','#fc4a1a'], ['#a18cd1','#fbc2eb'],
+  ['#fddb92','#d1fdff'], ['#ff6a88','#ff99ac']
+];
+const KEY='myCountdown_v1';
+let data = JSON.parse(localStorage.getItem(KEY)||'null') || {
+  title:'My Countdown 🌴',
+  events:[
+    {id:1,name:'Vacation Ends',emoji:'🏖️',date:'2026-11-13',theme:0},
+    {id:2,name:'Dakshana Valley JDST',emoji:'📚',date:'2026-12-13',theme:1},
+  ]
+};
+let editingId=null, selTheme=0;
+let calCursor=new Date(); calCursor.setDate(1);
+const $=s=>document.querySelector(s);
+const save=()=>localStorage.setItem(KEY,JSON.stringify(data));
+const pad=n=>String(n).padStart(2,'0');
+
+function fmt(d){return new Date(d+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---- STATIC render ---- */
+function renderStatic(){
+  $('#appTitle').textContent=data.title;
+  document.title=data.title;
+  $('#events').innerHTML=data.events.map((e,i)=>{
+    const [c1,c2]=THEMES[e.theme%THEMES.length];
+    return `<div class="card" data-id="${e.id}" style="--c1:${c1};--c2:${c2};animation-delay:${.15+i*.12}s">
+      <div class="event-top">
+        <span class="emoji">${e.emoji||'🎯'}</span>
+        <span class="event-name">${esc(e.name)}</span>
+        <button class="edit-link" onclick="openEdit(${e.id})">Edit ✏️</button>
+      </div>
+      <div class="big-days"><span class="days-num" data-r="d">--</span><span class="days-label" data-r="lbl">days left</span></div>
+      <div class="hms">
+        <div><b data-r="dd">--</b><span>days</span></div>
+        <div><b data-r="h">--</b><span>hrs</span></div>
+        <div><b data-r="m">--</b><span>min</span></div>
+        <div><b data-r="s">--</b><span>sec</span></div>
+      </div>
+      <div class="date-line">📅 ${fmt(e.date)}</div>
+      <div data-r="done" style="display:none"><span class="done-tag">${e.emoji||'🎉'} Done &amp; dusted!</span></div>
+    </div>`;
+  }).join('');
+  updateTimes();
+  renderCalendar();
+}
+
+/* ---- live numbers (flicker-free) ---- */
+function setNum(el,val){
+  if(el.textContent!==val){
+    el.textContent=val;
+    el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick');
+  }
+}
+function updateTimes(){
+  const now=new Date();
+  document.querySelectorAll('#events .card').forEach(card=>{
+    const id=+card.dataset.id;
+    const e=data.events.find(x=>x.id===id); if(!e)return;
+    const diff=new Date(e.date+'T00:00:00')-now;
+    const past=diff<-86400000;
+    const q=r=>card.querySelector(`[data-r="${r}"]`);
+    const days=Math.max(0,Math.ceil(diff/86400000));
+    const s=Math.max(0,Math.floor(diff/1000));
+    const dd=Math.floor(s/86400),
+          h=pad(Math.floor(s%86400/3600)),
+          m=pad(Math.floor(s%3600/60)),
+          ss=pad(s%60);
+    setNum(q('d'), past?'0':String(days));
+    q('lbl').textContent = past?'days ago':'days left';
+    q('done').style.display = past?'block':'none';
+    card.querySelector('.hms').style.display = past?'none':'flex';
+    if(!past){ setNum(q('dd'),String(dd)); setNum(q('h'),h); setNum(q('m'),m); setNum(q('s'),ss); }
+  });
+}
+setInterval(updateTimes,1000);
+
+/* ---- CALENDAR ---- */
+function renderCalendar(){
+  const y=calCursor.getFullYear(), m=calCursor.getMonth();
+  $('#calTitle').textContent=calCursor.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const firstDow=(new Date(y,m,1).getDay()+6)%7; // Monday start
+  const dim=new Date(y,m+1,0).getDate();
+  const today=new Date();
+  // map events of this month
+  const evMap={};
+  data.events.forEach(e=>{
+    const d=new Date(e.date+'T00:00:00');
+    if(d.getFullYear()===y&&d.getMonth()===m){
+      evMap[d.getDate()]=evMap[d.getDate()]||[];
+      evMap[d.getDate()].push(e);
+    }
+  });
+  let h=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<firstDow;i++) h+='<div class="cal-day empty"></div>';
+  for(let d=1;d<=dim;d++){
+    const isToday=d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear();
+    const evs=evMap[d];
+    let cls='cal-day'+(isToday?' today':'');
+    let style='';
+    if(evs){
+      const [c1,c2]=THEMES[evs[0].theme%THEMES.length];
+      cls+=' has-ev'; style=`--ec1:${c1};--ec2:${c2}`;
+    }
+    h+=`<div class="${cls}" style="${style}" onclick="dayTap(${d},${m},${y})">${d}</div>`;
+  }
+  $('#calGrid').innerHTML=h;
+  // legend
+  $('#calLegend').innerHTML=data.events.filter(e=>{
+    const d=new Date(e.date+'T00:00:00');
+    return d.getFullYear()===y&&d.getMonth()===m;
+  }).map(e=>{
+    const [c1,c2]=THEMES[e.theme%THEMES.length];
+    return `<div class="cal-chip"><span class="cal-dot" style="--c1:${c1};--c2:${c2}"></span>${e.emoji||'🎯'} ${esc(e.name)}</div>`;
+  }).join('') || `<div class="cal-chip">No events this month</div>`;
+}
+function shiftMonth(n){
+  calCursor.setMonth(calCursor.getMonth()+n);
+  renderCalendar();
+  const g=$('#calGrid');
+  g.style.animation='none'; void g.offsetWidth;
+  g.style.animation='pageIn .3s ease';
+}
+function dayTap(d,m,y){
+  const evs=data.events.filter(e=>{
+    const dt=new Date(e.date+'T00:00:00');
+    return dt.getFullYear()===y&&dt.getMonth()===m&&dt.getDate()===d;
+  });
+  if(evs.length){
+    const list=evs.map(e=>`${e.emoji||'🎯'} ${e.name}`).join('\n');
+    alert(`📅 ${d} ${new Date(y,m).toLocaleDateString(undefined,{month:'long'})}:\n\n${list}`);
+  }else{
+    openAdd(`${y}-${pad(m+1)}-${pad(d)}`);
+  }
+}
+
+/* ---- sheet logic ---- */
+function buildSwatches(){
+  $('#swatches').innerHTML=THEMES.map((t,i)=>
+    `<div class="swatch ${i===selTheme?'sel':''}" style="background:linear-gradient(135deg,${t[0]},${t[1]})" onclick="pickTheme(${i})"></div>`).join('');
+}
+function pickTheme(i){selTheme=i;buildSwatches()}
+function openAdd(preDate){
+  editingId=null;selTheme=Math.floor(Math.random()*THEMES.length);
+  $('#sheetTitle').textContent='New countdown';$('#fName').value='';$('#fEmoji').value='';
+  $('#fDate').value=preDate||new Date().toISOString().slice(0,10);
+  $('#delBtn').style.display='none';
+  buildSwatches();$('#overlay').classList.add('open')}
+function openEdit(id){const e=data.events.find(x=>x.id===id);if(!e)return;editingId=id;
+  $('#sheetTitle').textContent='Edit countdown';$('#fName').value=e.name;$('#fEmoji').value=e.emoji||'';
+  $('#fDate').value=e.date;selTheme=e.theme;$('#delBtn').style.display='block';
+  buildSwatches();$('#overlay').classList.add('open')}
+function closeSheet(){$('#overlay').classList.remove('open')}
+function saveEvent(){
+  const name=$('#fName').value.trim(),date=$('#fDate').value;
+  if(!name||!date)return toast('Title aur date dono daalo! ⚠️');
+  const emoji=$('#fEmoji').value.trim();
+  if(editingId){const e=data.events.find(x=>x.id===editingId);Object.assign(e,{name,date,emoji,theme:selTheme})}
+  else data.events.push({id:Date.now(),name,date,emoji,theme:selTheme});
+  save();renderStatic();closeSheet();toast('Saved! ✅')}
+function deleteEvent(){
+  if(!confirm('Delete this countdown?'))return;
+  data.events=data.events.filter(e=>e.id!==editingId);
+  save();renderStatic();closeSheet();toast('Deleted 🗑')}
+function editTitle(){
+  const t=prompt('App ka title badlo:',data.title);
+  if(t&&t.trim()){data.title=t.trim();save();renderStatic();toast('Title updated ✅')}}
+renderStatic();
+</script>
+</body>
+</html>
