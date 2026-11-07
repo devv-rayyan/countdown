@@ -234,7 +234,7 @@ function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;
 /* ---- STATIC render ---- */
 function renderStatic(){
   $('#appTitle').textContent=data.title;
-  document.title=data.title;
+  document.title = "Azm-e-Waqt – Free Countdown Timer & Event Tracker";
   $('#events').innerHTML=data.events.map((e,i)=>{
     const [c1,c2]=THEMES[e.theme%THEMES.length];
     return `<div class="card" data-id="${e.id}" style="--c1:${c1};--c2:${c2};animation-delay:${.15+i*.12}s">
